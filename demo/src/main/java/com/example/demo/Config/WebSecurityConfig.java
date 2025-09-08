@@ -39,6 +39,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/teacher/**").hasRole("TEACHER")
                         .requestMatchers("/student/**").hasRole("STUDENT")
+                        .requestMatchers("/reset-password/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form.disable()) // ⬅ tắt form login
                 .httpBasic(httpBasic -> httpBasic.disable()) // ⬅ tắt basic auth nếu có

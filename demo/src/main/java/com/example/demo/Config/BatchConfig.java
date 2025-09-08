@@ -60,8 +60,14 @@ public class BatchConfig {
     @Bean
     public ItemProcessor<Users, Users> excelProcessor() {
         return user -> {
-            if (user.getPassword() != null) {
+            if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
                 user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                return null;
+            }
+            if (user.getRole() == null) {
+                user.setRole(UserRole.STUDENT);
             }
             return user;
         };
@@ -73,15 +79,6 @@ public class BatchConfig {
     @Bean
     public ItemWriter<Users> excelWriter() {
         return users -> {
-            System.out.println("Writing users: " + users.size());
-            for (Users u : users) {
-                if (u.getRole() == null) {
-                    u.setRole(UserRole.STUDENT);
-                }
-                // if (u.getPassword() != null) { // && !u.getPassword().startsWith("$2a$")
-                // u.setPassword(passwordEncoder.encode(u.getPassword()));
-                // }
-            }
             userRepository.saveAll(users);
         };
     }

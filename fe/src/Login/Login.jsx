@@ -1,11 +1,13 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Login (){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    const [showInput, setShowInput] = useState(false);
+    const [emailConfirm, setEmailConfirm] = useState("");
 
     const handleLogin = async () => {
         try {
@@ -29,6 +31,20 @@ function Login (){
         }
     };
 
+    const forgotPassword = async () => {
+        setShowInput(true);
+    }
+
+    const sendReset = async () => {
+        try {
+            const res = await axios.post("http://localhost:8080/auth/forgot-password", { email: emailConfirm });    
+            console.log(res.data);
+            alert("Reset password email sent");
+        } catch (error) {
+            console.log("Send reset email failed", error.response?.data || error.message);
+            alert("Send reset email failed: " + (error.response?.data?.error || "Unknown error"));
+        }
+    }
 
     const handleAdmin = async () => {
         try {
@@ -50,11 +66,31 @@ function Login (){
         }
     }
 
+    useEffect(() => {
+        const checkTokenExpired = async () => {
+            const userParams = new URLSearchParams(window.location.search);
+            const token = userParams.get('token');
+            const res = await axios.get(`http://localhost:8080/auth/check-token/${token}`, {withCredentials: true});
+            if(res.data.valid){
+                navigate("/reset-password?token=" + token);
+            } else {
+                alert("Token is invalid or expired");
+            }
+        }
+        checkTokenExpired();
+    },[]);
+
     return (
         <div>
             <input placeholder="email" value={email} onChange={(e) => setEmail(e.target.value)}></input><br></br>
             <input placeholder="password" value={password} onChange={(e) => setPassword(e.target.value)}></input>
-            <a >Forgot password?</a>
+            <a onClick={forgotPassword}>Forgot password?</a>
+            {showInput && (
+                <div>
+                    <input placeholder="email confirm" value={emailConfirm} onChange={(e) => setEmailConfirm(e.target.value)}></input>
+                    <button onClick={sendReset}>Confirm</button>
+                </div>
+            )}
             <button onClick={handleLogin}>Login</button>
             <br></br>
             <p onClick={handleAdmin}>Admin</p>
